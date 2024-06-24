@@ -1,4 +1,5 @@
-use crate::{LineString, MultiPolygon, Polygon};
+use crate::{LineString, LinesIter, MultiPolygon, Polygon};
+use geo_types::Coord;
 use log::{error, info};
 
 use std::{
@@ -229,4 +230,82 @@ fn test_issue_buffer_box() {
     let wkt1 = "MULTIPOLYGON(((-164.93595896333647 152.85701803397086,-164.93595896333647 149.53568721641966,-51.873865625542294 153.2197777241044,-51.873865625542294 255.14903655104297,-153.80312445248086 255.14903655104297,-266.86521779027504 251.46494604335822,-266.86521779027504 149.53568721641966,-164.93595896333647 152.85701803397086)))";
     let wkt2 = "MULTIPOLYGON(((-164.93595896333647 149.53568721641966,-51.873865625542294 153.2197777241044,-153.80312445248086 153.2197777241044,-266.86521779027504 149.53568721641966,-164.93595896333647 149.53568721641966)))";
     check_sweep::<f64>(wkt1, wkt2, OpType::Union).unwrap();
+}
+
+#[test]
+fn test_issue_1104() {
+    let a: MultiPolygon<f32> = MultiPolygon::from(vec![
+        Polygon::new(
+            LineString::new(vec![
+                Coord {
+                    x: -19.064932,
+                    y: -6.57369,
+                },
+                Coord {
+                    x: -19.458324,
+                    y: -3.6231885,
+                },
+                Coord {
+                    x: -22.058823,
+                    y: -3.6231885,
+                },
+                Coord {
+                    x: -19.064932,
+                    y: -6.57369,
+                },
+            ]),
+            vec![],
+        ),
+        Polygon::new(
+            LineString::new(vec![
+                Coord {
+                    x: -14.705882,
+                    y: -10.869565,
+                },
+                Coord {
+                    x: -14.705882,
+                    y: -7.649791,
+                },
+                Coord {
+                    x: -17.60358,
+                    y: -8.013862,
+                },
+                Coord {
+                    x: -14.705882,
+                    y: -10.869565,
+                },
+            ]),
+            vec![],
+        ),
+    ]);
+
+    let b: MultiPolygon<f32> = MultiPolygon::from(vec![Polygon::new(
+        LineString::new(vec![
+            Coord {
+                x: -18.852,
+                y: -8.170715,
+            },
+            Coord {
+                x: -16.761898,
+                y: -24.659603,
+            },
+            Coord {
+                x: 43.387707,
+                y: -16.298937,
+            },
+            Coord {
+                x: 26.434301,
+                y: -2.4808762,
+            },
+            Coord {
+                x: -18.852,
+                y: -8.170715,
+            },
+        ]),
+        vec![],
+    )]);
+
+    let c = a.difference(&b);
+
+    assert_eq!(c.0.len(), 1);
 }
